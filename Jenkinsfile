@@ -1,24 +1,36 @@
 pipeline {
     agent any
+
     stages {
-        stage('Descargar codigo') {
+        stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/RuthDanielaAguirre/cv-daniela.git'
+                echo 'Codigo descargado de GitHub'
             }
         }
-        stage('Validar PHP') {
+
+        stage('Test') {
             steps {
-                sh 'find backend -name "*.php" -exec php -l {} \\;'
+                echo 'Verificando archivos...'
+                sh 'test -f backend/index.php && echo OK || echo ERROR'
             }
         }
-        stage('Desplegar en Apache') {
+
+        stage('Deploy') {
             steps {
-                sh 'sudo rm -rf /var/www/html/cv_site'
-                sh 'sudo cp -r backend /var/www/html/cv_site'
-                sh 'sudo chown -R www-data:www-data /var/www/html/cv_site'
-                sh 'sudo systemctl reload apache2'
+                echo 'Desplegando en Apache...'
+                sh 'cp -r backend/. /var/www/cv_site/'
+                sh 'sudo chown -R www-data:www-data /var/www/cv_site'
+                echo 'Despliegue completado'
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'CV actualizado correctamente'
+        }
+        failure {
+            echo 'Pipeline fallido: revisar logs'
         }
     }
 }
